@@ -4,9 +4,9 @@ import React, { useState } from "react";
 import { Send } from "lucide-react";
 import type { MessageInputProps } from "@/types/chat";
 
-export const MessageInput: React.FC<MessageInputProps> = ({
-  onSendMessage,
-}) => {
+export const MessageInput: React.FC<
+  MessageInputProps & { placeholder?: string }
+> = ({ onSendMessage, placeholder = "メッセージを入力..." }) => {
   const [message, setMessage] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -24,7 +24,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="メッセージを入力..."
+          placeholder={placeholder}
           className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
         />
         <button

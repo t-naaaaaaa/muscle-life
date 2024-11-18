@@ -7,6 +7,8 @@ export type Message = {
   timestamp: Date;
 };
 
+export type ChatMode = "motivational" | "ai";
+
 export type MessageListProps = {
   messages: Message[];
 };
@@ -18,3 +20,8 @@ export type MessageInputProps = {
 export type ChatProps = Record<string, never>;
 
 export type ChatComponent = FC<ChatProps>;
+
+export type ChatTabProps = {
+  activeMode: ChatMode;
+  onModeChange: (mode: ChatMode) => void;
+};
