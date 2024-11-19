@@ -6,7 +6,7 @@ import React, { useState, useEffect } from "react";
 import { DateHeader } from "./DateHeader";
 import { MessageDisplay } from "./MessageDisplay";
 import { MotivationalImage } from "./MotivationalImage";
-import {  backgrounds } from "@/config/calendar";
+import { backgrounds } from "@/config/calendar";
 import { botMessages } from "@/config/messages"; // botMessagesをインポート
 import type {
   PositiveCalendarComponent,
@@ -57,62 +57,62 @@ const PositiveCalendar: PositiveCalendarComponent = () => {
     line: "https://line.me/R/ti/p/@933lxkde", // 実際のLINE URLに変更
   };
 
-return (
-  <div
-    className={`min-h-screen flex flex-col items-center justify-center p-4 relative ${currentBackground.className}`}
-  >
-    <div className="w-full max-w-lg">
-      <div className="bg-black/20 backdrop-blur-sm rounded-2xl overflow-hidden">
-        <DateHeader currentDate={currentDate} onDateChange={setCurrentDate} />
-        <div className="p-6 space-y-6">
-          <MessageDisplay message={currentMessage.text} />
-          <div className="aspect-[4/3] rounded-xl overflow-hidden">
-            <MotivationalImage imageId={currentMessage.imageId} />
+  return (
+    <div
+      className={`min-h-screen flex flex-col items-center justify-center p-4 relative ${currentBackground.className}`}
+    >
+      <div className="w-full max-w-lg">
+        <div className="bg-black/20 backdrop-blur-sm rounded-2xl overflow-hidden">
+          <DateHeader currentDate={currentDate} onDateChange={setCurrentDate} />
+          <div className="p-6 space-y-6">
+            <MessageDisplay message={currentMessage.text} />
+            <div className="aspect-[4/3] rounded-xl overflow-hidden">
+              <MotivationalImage imageId={currentMessage.imageId} />
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    {/* ソーシャルメディアボタン */}
-    <div className="fixed bottom-4 left-4 flex flex-col gap-2">
-      {/* Xボタン */}
-      <a
-        href={socialLinks.twitter}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="w-14 h-14 bg-black hover:bg-gray-800 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-300"
-        aria-label="X (Twitter) Account"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="w-6 h-6"
+      {/* ソーシャルメディアボタン */}
+      <div className="fixed bottom-4 left-4 flex flex-col gap-2">
+        {/* Xボタン */}
+        <a
+          href={socialLinks.twitter}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-14 h-14 bg-black hover:bg-gray-800 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-300"
+          aria-label="X (Twitter) Account"
         >
-          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-        </svg>
-      </a>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            className="w-6 h-6"
+          >
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+          </svg>
+        </a>
 
-      {/* LINEボタン */}
-      <a
-        href={socialLinks.line}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="w-14 h-14 bg-[#00B900] hover:bg-[#009900] rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-300"
-        aria-label="LINE Account"
-      >
-        <svg
-          xmlns="/public/images/LINE_APP_Android.png"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="w-6 h-6"
+        {/* LINEボタン */}
+        <a
+          href={socialLinks.line}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-14 h-14 bg-[#00B900] hover:bg-[#009900] rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-300"
+          aria-label="LINE Account"
         >
-          <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16.95 15.46C16.76 15.76 16.44 15.94 16.09 15.94C15.74 15.94 15.42 15.76 15.23 15.46L14.06 13.62L11.94 13.62L10.77 15.46C10.58 15.76 10.26 15.94 9.91 15.94C9.56 15.94 9.24 15.76 9.05 15.46L7.05 12.31C6.86 12.01 6.86 11.63 7.05 11.33L9.05 8.18C9.24 7.88 9.56 7.7 9.91 7.7C10.26 7.7 10.58 7.88 10.77 8.18L11.94 10.02L14.06 10.02L15.23 8.18C15.42 7.88 15.74 7.7 16.09 7.7C16.44 7.7 16.76 7.88 16.95 8.18L18.95 11.33C19.14 11.63 19.14 12.01 18.95 12.31L16.95 15.46Z" />
-        </svg>
-      </a>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            className="w-6 h-6"
+          >
+            <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.001 12 .001S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314" />
+          </svg>
+        </a>
+      </div>
     </div>
-  </div>
-);
+  );
 };
 
 export default PositiveCalendar;
