@@ -1,3 +1,5 @@
+//src/types/calendar.ts
+
 import type { FC } from "react";
 
 export type CalendarMessage = {

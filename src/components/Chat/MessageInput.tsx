@@ -1,3 +1,5 @@
+//src/components/Chat/MessageInput.tsx
+
 "use client";
 
 import React, { useState } from "react";

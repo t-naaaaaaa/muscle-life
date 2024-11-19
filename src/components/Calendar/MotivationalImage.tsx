@@ -1,3 +1,5 @@
+//src/components/Calendar/MotivationalImage.tsx
+
 "use client";
 
 import React, { memo } from "react";

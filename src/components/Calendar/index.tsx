@@ -1,68 +1,68 @@
+// src/components/Calendar/index.tsx
+
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { messages, backgrounds } from "@/config/calendar";
+import React, { useState, useEffect } from "react";
 import { DateHeader } from "./DateHeader";
 import { MessageDisplay } from "./MessageDisplay";
 import { MotivationalImage } from "./MotivationalImage";
-import type { PositiveCalendarComponent } from "@/types/calendar";
+import {  backgrounds } from "@/config/calendar";
+import { botMessages } from "@/config/messages"; // botMessagesをインポート
+import type {
+  PositiveCalendarComponent,
+  CalendarMessage,
+  Background,
+} from "@/types/calendar";
 
 const PositiveCalendar: PositiveCalendarComponent = () => {
-  const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  const [message, setMessage] = useState<string>("");
-  const [background, setBackground] = useState<string>("");
-  const [imageId, setImageId] = useState<number>(1);
-
-  const updateDailyContent = useCallback(() => {
-    const startOfYear = new Date(currentDate.getFullYear(), 0, 1);
-    const daysSinceStart = Math.floor(
-      (currentDate.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000)
-    );
-    const messageIndex = daysSinceStart % messages.length;
-    const bgIndex = Math.floor(daysSinceStart / 7) % backgrounds.length;
-
-    try {
-      const selectedMessage = messages[messageIndex];
-      setMessage(selectedMessage.text);
-      setImageId(selectedMessage.imageId);
-      setBackground(backgrounds[bgIndex].className);
-    } catch (error) {
-      console.error("Error updating daily content:", error);
-      setMessage(messages[0].text);
-      setImageId(messages[0].imageId);
-      setBackground(backgrounds[0].className);
-    }
-  }, [currentDate]);
+  const [currentMessage, setCurrentMessage] = useState<CalendarMessage | null>(
+    null
+  );
+  const [currentBackground, setCurrentBackground] = useState<Background | null>(
+    null
+  );
+  const [currentDate, setCurrentDate] = useState(() => new Date());
 
   useEffect(() => {
-    updateDailyContent();
+    // 日付から1年の通算日を計算（0から364）
+    const startOfYear = new Date(currentDate.getFullYear(), 0, 1);
+    const diff = currentDate.getTime() - startOfYear.getTime();
+    const oneDay = 1000 * 60 * 60 * 24;
+    const dayOfYear = Math.floor(diff / oneDay);
 
-    const timer = setInterval(() => {
-      const now = new Date();
-      if (now.getDate() !== currentDate.getDate()) {
-        setCurrentDate(now);
-      }
-    }, 1000 * 60);
+    // 100日で1周するように調整（0から99の値を取得）
+    const messageIndex = dayOfYear % 100;
 
-    return () => clearInterval(timer);
-  }, [currentDate, updateDailyContent]);
+    // メッセージを設定（botMessagesから取得）
+    const todaysMessage: CalendarMessage = {
+      id: messageIndex + 1,
+      text: botMessages[messageIndex].text,
+      imageId: (messageIndex % 7) + 1, // 画像は7枚を循環
+    };
 
-  const handleDateChange = (newDate: Date) => {
-    setCurrentDate(newDate);
-  };
+    // 背景もパターン化（例：5日で1周）
+    const backgroundIndex = dayOfYear % backgrounds.length;
+
+    setCurrentMessage(todaysMessage);
+    setCurrentBackground(backgrounds[backgroundIndex]);
+  }, [currentDate]); // currentDateが変更されたときに再計算
+
+  if (!currentMessage || !currentBackground) {
+    return null;
+  }
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 bg-gray-900">
-      <div
-        className={`w-[500px] rounded-2xl shadow-xl transition-colors duration-300 overflow-hidden ${background}`}
-        role="main"
-        aria-label="Daily motivation calendar"
-      >
-        <DateHeader currentDate={currentDate} onDateChange={handleDateChange} />
-        <div className="p-4 flex flex-col gap-4">
-          <MessageDisplay message={message} />
-          <div className="aspect-square w-full">
-            <MotivationalImage imageId={imageId} />
+    <div
+      className={`min-h-screen flex flex-col items-center justify-center p-4 ${currentBackground.className}`}
+    >
+      <div className="w-full max-w-lg">
+        <div className="bg-black/20 backdrop-blur-sm rounded-2xl overflow-hidden">
+          <DateHeader currentDate={currentDate} onDateChange={setCurrentDate} />
+          <div className="p-6 space-y-6">
+            <MessageDisplay message={currentMessage.text} />
+            <div className="aspect-[4/3] rounded-xl overflow-hidden">
+              <MotivationalImage imageId={currentMessage.imageId} />
+            </div>
           </div>
         </div>
       </div>

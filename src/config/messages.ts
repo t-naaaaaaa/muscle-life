@@ -1,3 +1,5 @@
+//src/config/messages.ts
+
 type BotMessage = {
   id: number;
   text: string;
@@ -257,7 +259,6 @@ export const botMessages: BotMessage[] = [
     category: "motivation",
   },
 ];
-
 
 export const getRandomMessage = (): string => {
   const randomIndex = Math.floor(Math.random() * botMessages.length);

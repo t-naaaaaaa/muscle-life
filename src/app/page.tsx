@@ -1,3 +1,5 @@
+//src/app/layout.tsx
+
 import PositiveCalendar from "@/components/Calendar";
 import { Chat } from "@/components/Chat";
 

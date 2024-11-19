@@ -1,3 +1,5 @@
+//src/components/Chat/ChatTabs.tsx
+
 "use client";
 
 import React from "react";

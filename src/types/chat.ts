@@ -1,3 +1,5 @@
+//src/types/chat.ts
+
 import type { FC } from "react";
 
 export type Message = {

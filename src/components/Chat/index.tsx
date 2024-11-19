@@ -1,20 +1,65 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { MessageList } from "./MessageList";
 import { MessageInput } from "./MessageInput";
 import { ChatTabs } from "./ChatTabs";
 import { MessageCircle, X } from "lucide-react";
 import { getRandomMessage } from "@/config/messages";
 import type { Message, ChatComponent, ChatMode } from "@/types/chat";
+import { ChatResponseGenerator } from "./ChatResponseGenerator";
 
 export const Chat: ChatComponent = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]); // iamessages から messages に変更
+
   const [chatMode, setChatMode] = useState<ChatMode>("motivational");
   const [isOpen, setIsOpen] = useState(false);
 
+  // システムメッセージの送信
+  useEffect(() => {
+    if (messages.length === 0) {
+      const initialMessage: Message = {
+        id: Date.now().toString(),
+        text:
+          chatMode === "motivational"
+            ? "筋肉が全て解決する！メッセージを送って筋肉を鍛えよう！"
+            : "筋肉が全て解決する！メッセージを送って筋肉を鍛えよう！",
+        sender: "bot",
+        timestamp: new Date(),
+      };
+      setMessages([initialMessage]);
+    }
+  }, [chatMode, messages.length]);
+
+  // 以下は同じコードが続くので省略...
+  const getBotResponse = useCallback(
+    (userMessage: string) => {
+      if (chatMode === "motivational") {
+        return new Promise<string>((resolve) => {
+          setTimeout(() => {
+            const response = getRandomMessage();
+            resolve(response);
+          }, 1000);
+        });
+      } else {
+        return new Promise<string>(async (resolve) => {
+          try {
+            const response = await ChatResponseGenerator.generateAIResponse(
+              userMessage
+            );
+            resolve(response);
+          } catch (error) {
+            console.error("Error generating AI response:", error);
+            resolve("マインドとフィジカルは全てを凌駕します。");
+          }
+        });
+      }
+    },
+    [chatMode]
+  );
+
   const handleSendMessage = useCallback(
-    (text: string) => {
+    async (text: string) => {
       const newMessage: Message = {
         id: Date.now().toString(),
         text,
@@ -24,20 +69,45 @@ export const Chat: ChatComponent = () => {
 
       setMessages((prev) => [...prev, newMessage]);
 
-      setTimeout(() => {
-        const botMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          text:
-            chatMode === "motivational"
-              ? getRandomMessage()
-              : "申し訳ありません。AIモードは現在開発中です。もう少々お待ちください。",
-          sender: "bot",
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, botMessage]);
-      }, 1000);
+      // タイピングインジケータメッセージ
+      const typingMessage: Message = {
+        id: "typing",
+        text: "入力中...",
+        sender: "bot",
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, typingMessage]);
+
+      try {
+        const response = await getBotResponse(text);
+
+        // タイピングメッセージを削除して実際の応答を追加
+        setMessages((prev) =>
+          prev
+            .filter((msg) => msg.id !== "typing")
+            .concat({
+              id: (Date.now() + 1).toString(),
+              text: response,
+              sender: "bot",
+              timestamp: new Date(),
+            })
+        );
+      } catch (error) {
+        console.error("Error getting bot response:", error);
+        setMessages((prev) =>
+          prev
+            .filter((msg) => msg.id !== "typing")
+            .concat({
+              id: (Date.now() + 1).toString(),
+              text: "システムの筋力が一時的に低下しています。超回復のため少々お待ちください。",
+              sender: "bot",
+              timestamp: new Date(),
+            })
+        );
+      }
     },
-    [chatMode]
+    [getBotResponse]
   );
 
   const handleModeChange = (mode: ChatMode) => {
