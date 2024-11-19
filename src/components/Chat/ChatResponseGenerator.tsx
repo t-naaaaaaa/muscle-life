@@ -1,8 +1,13 @@
 // src/components/ChatResponseGenerator.tsx
+"use client";
 
 import { errorMessages } from "@/config/errors";
+
 export class ChatResponseGenerator {
-  static async generateAIResponse(userMessage: string): Promise<string> {
+  static async generateAIResponse(
+    userMessage: string,
+    onChunkReceived?: (chunk: string) => void
+  ): Promise<string> {
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -28,8 +33,13 @@ export class ChatResponseGenerator {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        result += decoder.decode(value, { stream: true });
-        // ここでリアルタイムに result を更新して表示できます
+        const chunk = decoder.decode(value, { stream: true });
+        result += chunk;
+
+        // リアルタイムに受信したデータを処理
+        if (onChunkReceived) {
+          onChunkReceived(chunk);
+        }
       }
 
       return result;
