@@ -1,53 +1,51 @@
-// src/components/ChatResponseGenerator.tsx
-"use client";
+// src/components/Chat/ChatResponseGenerator.tsx
 
+import { Message } from "@/types/chat";
 import { errorMessages } from "@/config/errors";
 
 export class ChatResponseGenerator {
   static async generateAIResponse(
-    userMessage: string,
+    messages: Message[],
     onChunkReceived?: (chunk: string) => void
   ): Promise<string> {
+    console.log("🤖 ChatResponseGenerator: リクエスト開始", messages);
+
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [{ role: "user", content: userMessage }],
+          messages: messages.map((msg) => ({
+            sender: msg.sender,
+            text: msg.text,
+          })),
         }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || errorMessages.unknownError);
+      const data = await response.json();
+
+      // エラーレスポンスの処理
+      if (data.error) {
+        console.error("❌ ChatResponseGenerator: エラーレスポンス", data.error);
+        throw new Error(data.error);
       }
 
-      if (!response.body) {
-        throw new Error("ストリームが利用できません");
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder("utf-8");
-      let result = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        result += chunk;
-
-        // リアルタイムに受信したデータを処理
+      // 通常のレスポンス処理
+      if (data.completion) {
+        console.log(
+          "✅ ChatResponseGenerator: 正常レスポンス",
+          data.completion
+        );
         if (onChunkReceived) {
-          onChunkReceived(chunk);
+          onChunkReceived(data.completion);
         }
+        return data.completion;
       }
 
-      return result;
+      throw new Error(errorMessages.unknownError);
     } catch (error) {
-      console.error("AI Response Error:", error);
-      return error instanceof Error
-        ? error.message
-        : errorMessages.unknownError;
+      console.error("❌ ChatResponseGenerator: エラー発生", error);
+      throw error;
     }
   }
 }

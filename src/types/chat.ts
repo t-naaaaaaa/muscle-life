@@ -15,9 +15,11 @@ export type MessageListProps = {
   messages: Message[];
 };
 
-export type MessageInputProps = {
-  onSendMessage: (text: string) => void;
-};
+export interface MessageInputProps {
+  onSendMessage: (text: string) => Promise<void>;
+  disabled?: boolean;
+  placeholder?: string;
+}
 
 export type ChatProps = Record<string, never>;
 

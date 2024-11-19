@@ -1,3 +1,5 @@
+// src/components/Chat/index.tsx
+
 "use client";
 
 import React, { useState, useCallback, useEffect } from "react";
@@ -10,56 +12,59 @@ import type { Message, ChatComponent, ChatMode } from "@/types/chat";
 import { ChatResponseGenerator } from "./ChatResponseGenerator";
 
 export const Chat: ChatComponent = () => {
-  const [messages, setMessages] = useState<Message[]>([]); // iamessages から messages に変更
-
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [chatMode, setChatMode] = useState<ChatMode>("motivational");
   const [isOpen, setIsOpen] = useState(false);
 
   // システムメッセージの送信
   useEffect(() => {
-    if (messages.length === 0) {
-      const initialMessage: Message = {
-        id: Date.now().toString(),
-        text:
-          chatMode === "motivational"
-            ? "筋肉が全て解決する！メッセージを送って筋肉を鍛えよう！"
-            : "筋肉が全て解決する！メッセージを送って筋肉を鍛えよう！",
-        sender: "bot",
-        timestamp: new Date(),
-      };
-      setMessages([initialMessage]);
-    }
-  }, [chatMode, messages.length]);
+    const initialMessage: Message = {
+      id: Date.now().toString(),
+      text: "筋肉が全て解決する！メッセージを送って筋肉を鍛えよう！",
+      sender: "bot",
+      timestamp: new Date(),
+    };
+    setMessages([initialMessage]);
+  }, [chatMode]);
 
-  // 以下は同じコードが続くので省略...
-  const getBotResponse = useCallback(
-    (userMessage: string) => {
-      if (chatMode === "motivational") {
-        return new Promise<string>((resolve) => {
-          setTimeout(() => {
-            const response = getRandomMessage();
-            resolve(response);
-          }, 1000);
-        });
-      } else {
-        return new Promise<string>(async (resolve) => {
-          try {
-            const response = await ChatResponseGenerator.generateAIResponse(
-              userMessage
-            );
-            resolve(response);
-          } catch (error) {
-            console.error("Error generating AI response:", error);
-            resolve("マインドとフィジカルは全てを凌駕します。");
-          }
-        });
+  const handleMotivationalMessage = useCallback(() => {
+    console.log("💪 筋トレモード: ランダムメッセージを生成");
+    return new Promise<string>((resolve) => {
+      setTimeout(() => {
+        // messages.tsからランダムなメッセージを取得
+        const randomMessage = getRandomMessage();
+        console.log("📝 選択されたメッセージ:", randomMessage);
+        resolve(randomMessage);
+      }, 1000);
+    });
+  }, []);
+
+  const handleAIMessage = useCallback(
+    async (
+      allMessages: Message[],
+      onChunkReceived?: (chunk: string) => void
+    ) => {
+      console.log("🤖 AIモード: メッセージ生成開始");
+      try {
+        const response = await ChatResponseGenerator.generateAIResponse(
+          allMessages,
+          onChunkReceived
+        );
+        return response;
+      } catch (error) {
+        console.error("❌ AIモード: エラー発生", error);
+        throw error;
       }
     },
-    [chatMode]
+    []
   );
 
   const handleSendMessage = useCallback(
     async (text: string) => {
+      if (!text.trim() || isLoading) return;
+
+      setIsLoading(true);
       const newMessage: Message = {
         id: Date.now().toString(),
         text,
@@ -69,10 +74,10 @@ export const Chat: ChatComponent = () => {
 
       setMessages((prev) => [...prev, newMessage]);
 
-      // タイピングインジケータメッセージ
+      const typingMessageId = `typing-${Date.now()}`;
       const typingMessage: Message = {
-        id: "typing",
-        text: "入力中...",
+        id: typingMessageId,
+        text: "",
         sender: "bot",
         timestamp: new Date(),
       };
@@ -80,34 +85,57 @@ export const Chat: ChatComponent = () => {
       setMessages((prev) => [...prev, typingMessage]);
 
       try {
-        const response = await getBotResponse(text);
+        if (chatMode === "motivational") {
+          const response = await handleMotivationalMessage();
+          setMessages((prev) =>
+            prev
+              .filter((msg) => msg.id !== typingMessageId)
+              .concat({
+                id: Date.now().toString(),
+                text: response,
+                sender: "bot",
+                timestamp: new Date(),
+              })
+          );
+        } else {
+          await handleAIMessage([...messages, newMessage], (chunk) => {
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === typingMessageId
+                  ? { ...msg, text: msg.text + chunk }
+                  : msg
+              )
+            );
+          });
 
-        // タイピングメッセージを削除して実際の応答を追加
-        setMessages((prev) =>
-          prev
-            .filter((msg) => msg.id !== "typing")
-            .concat({
-              id: (Date.now() + 1).toString(),
-              text: response,
-              sender: "bot",
-              timestamp: new Date(),
-            })
-        );
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === typingMessageId
+                ? { ...msg, id: Date.now().toString(), timestamp: new Date() }
+                : msg
+            )
+          );
+        }
       } catch (error) {
-        console.error("Error getting bot response:", error);
+        console.error("メッセージ送信エラー:", error);
         setMessages((prev) =>
           prev
-            .filter((msg) => msg.id !== "typing")
+            .filter((msg) => msg.id !== typingMessageId)
             .concat({
-              id: (Date.now() + 1).toString(),
-              text: "システムの筋力が一時的に低下しています。超回復のため少々お待ちください。",
+              id: Date.now().toString(),
+              text:
+                error instanceof Error
+                  ? error.message
+                  : "エラーが発生しました。もう一度お試しください。",
               sender: "bot",
               timestamp: new Date(),
             })
         );
+      } finally {
+        setIsLoading(false);
       }
     },
-    [getBotResponse]
+    [chatMode, isLoading, messages, handleMotivationalMessage, handleAIMessage]
   );
 
   const handleModeChange = (mode: ChatMode) => {
@@ -137,11 +165,10 @@ export const Chat: ChatComponent = () => {
           xl:w-96 xl:h-[500px]
           xl:translate-y-0
           
-          // モバイル・タブレット用のスタイル
           ${
             isOpen
               ? "bottom-0 right-0 w-full h-[80vh] translate-y-0"
-              : "translate-y-full"
+              : "bottom-0 right-0 w-full h-[80vh] translate-y-full"
           }
           xl:translate-y-0
           
@@ -171,11 +198,14 @@ export const Chat: ChatComponent = () => {
             <X size={20} />
           </button>
         </div>
+
         <ChatTabs activeMode={chatMode} onModeChange={handleModeChange} />
+
         <div className="flex-1 overflow-hidden flex flex-col">
           <MessageList messages={messages} />
           <MessageInput
             onSendMessage={handleSendMessage}
+            disabled={isLoading}
             placeholder={
               chatMode === "motivational"
                 ? "メッセージを入力..."
