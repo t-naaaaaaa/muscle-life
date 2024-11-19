@@ -9,12 +9,6 @@ const REQUESTS_PER_WINDOW = 40; // 余裕を持って設定
 let requestCount = 0;
 let windowStart = Date.now();
 
-// リトライの設定
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000;
-
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 // レート制限チェック
 const checkRateLimit = () => {
   const now = Date.now();
@@ -59,9 +53,14 @@ export async function POST(req: Request) {
 
     const { messages } = await req.json();
     console.log("📨 Chat API: 受信メッセージ:", messages);
+    // Message インターフェースを定義
+    interface Message {
+      sender: string;
+      text: string;
+    }
 
     try {
-      let response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -71,7 +70,7 @@ export async function POST(req: Request) {
         body: JSON.stringify({
           model: "claude-3-opus-20240229",
           system: aiPrompts.systemPrompt,
-          messages: messages.map((msg: any) => ({
+          messages: messages.map((msg: Message) => ({
             role: msg.sender === "user" ? "user" : "assistant",
             content: msg.text,
           })),

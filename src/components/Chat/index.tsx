@@ -43,13 +43,11 @@ export const Chat: ChatComponent = () => {
   const handleAIMessage = useCallback(
     async (
       allMessages: Message[],
-      onChunkReceived?: (chunk: string) => void
     ) => {
       console.log("🤖 AIモード: メッセージ生成開始");
       try {
         const response = await ChatResponseGenerator.generateAIResponse(
           allMessages,
-          onChunkReceived
         );
         return response;
       } catch (error) {

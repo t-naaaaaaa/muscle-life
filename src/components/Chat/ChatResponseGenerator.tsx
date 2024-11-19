@@ -1,12 +1,10 @@
 // src/components/Chat/ChatResponseGenerator.tsx
 
 import { Message } from "@/types/chat";
-import { errorMessages } from "@/config/errors";
 
 export class ChatResponseGenerator {
   static async generateAIResponse(
     messages: Message[],
-    onChunkReceived?: (chunk: string) => void
   ): Promise<string> {
     console.log("🤖 ChatResponseGenerator: リクエスト開始", messages);
 
