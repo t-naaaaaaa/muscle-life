@@ -53,8 +53,8 @@ const PositiveCalendar: PositiveCalendarComponent = () => {
 
   // ソーシャルメディアのリンク
   const socialLinks = {
-    twitter: "https://twitter.com/your-account", // 実際のXアカウントURLに変更
-    line: "https://line.me/R/ti/p/@your-account", // 実際のLINE URLに変更
+    twitter: "https://twitter.com/kyo_tomap", // 実際のXアカウントURLに変更
+    line: "https://line.me/R/ti/p/@933lxkde", // 実際のLINE URLに変更
   };
 
 return (
