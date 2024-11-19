@@ -13,7 +13,7 @@ export class ChatResponseGenerator {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [{ sender: "user", text: userMessage }],
+          messages: [{ role: "user", content: userMessage }],
         }),
       });
 
