@@ -53,99 +53,60 @@ export async function POST(req: Request) {
     }
 
     if (!process.env.ANTHROPIC_API_KEY) {
+      console.log("❌ Chat API: API key未設定");
       throw new Error("API key is not configured");
     }
 
     const { messages } = await req.json();
-
-    // 入力文字数制限チェック
-    const lastUserMessage = messages[messages.length - 1];
-    if (lastUserMessage.sender === "user" && lastUserMessage.text.length > 30) {
-      return new Response(
-        JSON.stringify({
-          error: "Message too long",
-          details: "Please limit your message to 30 characters",
-        }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
-
     console.log("📨 Chat API: 受信メッセージ:", messages);
 
-    let prompt = aiPrompts.systemPrompt;
-    const formattedMessages = messages
-      .map((msg: any) => {
-        const role = msg.sender === "user" ? "Human" : "Assistant";
-        return `\n\n${role}: ${msg.text.trim()}`;
-      })
-      .join("");
+    try {
+      let response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": process.env.ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-3-opus-20240229",
+          system: aiPrompts.systemPrompt,
+          messages: messages.map((msg: any) => ({
+            role: msg.sender === "user" ? "user" : "assistant",
+            content: msg.text,
+          })),
+          max_tokens: 150, // トークン数を増やす
+          temperature: 0.1,
+        }),
+      });
 
-    prompt += formattedMessages + "\n\nAssistant:";
+      console.log("📝 Chat API: APIレスポンス状態:", response.status);
+      const data = await response.json();
+      console.log("📝 Chat API: APIレスポンスデータ:", data);
 
-    let lastError;
-    for (let i = 0; i < MAX_RETRIES; i++) {
-      try {
-        const response = await fetch("https://api.anthropic.com/v1/complete", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-API-Key": process.env.ANTHROPIC_API_KEY!,
-            "anthropic-version": "2023-06-01",
-          },
-          body: JSON.stringify({
-            prompt,
-            model: "claude-2.1",
-            max_tokens_to_sample: 50, // トークン数削減
-            stream: false,
-            stop_sequences: ["\n\nHuman:", "。", "！", "？"],
-            temperature: 0.1, // より決定論的な応答に
-          }),
-        });
+      if (!response.ok) {
+        throw new Error(data.error?.message || "API request failed");
+      }
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error(`❌ Chat API: 試行 ${i + 1} 失敗:`, errorData);
+      // content配列の最初のテキストを取得
+      const messageText =
+        data.content[0]?.text || "応答を生成できませんでした。";
 
-          if (errorData.error?.type === "overloaded_error") {
-            lastError = errorData;
-            await delay(RETRY_DELAY * (i + 1));
-            continue;
-          }
-
-          throw new Error(JSON.stringify(errorData));
-        }
-
-        const data = await response.json();
-        return new Response(JSON.stringify({ completion: data.completion }), {
+      return new Response(
+        JSON.stringify({
+          completion: messageText,
+        }),
+        {
           headers: {
             "Content-Type": "application/json",
             "Cache-Control": "public, max-age=60",
           },
-        });
-      } catch (error) {
-        lastError = error;
-        if (i < MAX_RETRIES - 1) {
-          await delay(RETRY_DELAY * (i + 1));
-          continue;
         }
-      }
+      );
+    } catch (error) {
+      console.error("❌ Chat API: API呼び出しエラー:", error);
+      throw error;
     }
-
-    console.error("❌ Chat API: すべてのリトライが失敗");
-    return new Response(
-      JSON.stringify({
-        error: errorMessages.overloaded,
-        details:
-          lastError instanceof Error ? lastError.message : "Unknown error",
-      }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
   } catch (error) {
     console.error("💥 Chat API: 重大エラー:", error);
     return new Response(

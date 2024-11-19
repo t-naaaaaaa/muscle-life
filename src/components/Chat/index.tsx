@@ -74,12 +74,14 @@ export const Chat: ChatComponent = () => {
 
       setMessages((prev) => [...prev, newMessage]);
 
+      // タイピングインジケーター用のメッセージ
       const typingMessageId = `typing-${Date.now()}`;
       const typingMessage: Message = {
         id: typingMessageId,
-        text: "",
+        text: "・・・", // タイピングインジケーター
         sender: "bot",
         timestamp: new Date(),
+        isTyping: true, // タイピング状態を示すフラグ
       };
 
       setMessages((prev) => [...prev, typingMessage]);
@@ -98,22 +100,16 @@ export const Chat: ChatComponent = () => {
               })
           );
         } else {
-          await handleAIMessage([...messages, newMessage], (chunk) => {
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === typingMessageId
-                  ? { ...msg, text: msg.text + chunk }
-                  : msg
-              )
-            );
-          });
-
+          const response = await handleAIMessage([...messages, newMessage]);
           setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === typingMessageId
-                ? { ...msg, id: Date.now().toString(), timestamp: new Date() }
-                : msg
-            )
+            prev
+              .filter((msg) => msg.id !== typingMessageId)
+              .concat({
+                id: Date.now().toString(),
+                text: response,
+                sender: "bot",
+                timestamp: new Date(),
+              })
           );
         }
       } catch (error) {
@@ -129,6 +125,7 @@ export const Chat: ChatComponent = () => {
                   : "エラーが発生しました。もう一度お試しください。",
               sender: "bot",
               timestamp: new Date(),
+              isError: true, // エラー状態を示すフラグ
             })
         );
       } finally {

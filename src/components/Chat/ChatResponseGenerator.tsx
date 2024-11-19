@@ -23,29 +23,27 @@ export class ChatResponseGenerator {
       });
 
       const data = await response.json();
+      console.log("📝 ChatResponseGenerator: レスポンスデータ:", data);
 
-      // エラーレスポンスの処理
+      if (!response.ok) {
+        console.error("❌ ChatResponseGenerator: HTTPエラー", response.status);
+        throw new Error(data.error || "Unknown error");
+      }
+
       if (data.error) {
         console.error("❌ ChatResponseGenerator: エラーレスポンス", data.error);
         throw new Error(data.error);
       }
 
-      // 通常のレスポンス処理
-      if (data.completion) {
-        console.log(
-          "✅ ChatResponseGenerator: 正常レスポンス",
-          data.completion
-        );
-        if (onChunkReceived) {
-          onChunkReceived(data.completion);
-        }
-        return data.completion;
+      if (!data.completion) {
+        console.error("❌ ChatResponseGenerator: 不正なレスポンス形式");
+        throw new Error("Invalid response format");
       }
 
-      throw new Error(errorMessages.unknownError);
+      return data.completion;
     } catch (error) {
       console.error("❌ ChatResponseGenerator: エラー発生", error);
       throw error;
     }
   }
-}
+};

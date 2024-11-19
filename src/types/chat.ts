@@ -7,6 +7,8 @@ export type Message = {
   text: string;
   sender: "user" | "bot";
   timestamp: Date;
+  isTyping?: boolean;
+  isError?: boolean;
 };
 
 export type ChatMode = "motivational" | "ai";
